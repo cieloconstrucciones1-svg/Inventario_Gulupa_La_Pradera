@@ -27,8 +27,8 @@
   .field-head h2{margin:0;font-size:19px}.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}
   .view-note{position:relative;margin:0 0 12px;padding:9px 12px;border-radius:14px;background:#edf6e9;color:#42683b;font-size:13px;font-weight:700;border:1px solid #dcebd4}
   .rows{position:relative;display:grid;grid-template-columns:repeat(41,minmax(12px,1fr));gap:4px;align-items:flex-start;width:100%;min-width:0;padding:4px 2px 22px}
-  .row{min-width:0;text-align:center}.row-title{position:sticky;top:82px;z-index:2;background:#fff;border:1px solid #dde7d8;border-radius:10px;padding:6px 1px;margin-bottom:10px;font-weight:900;color:#44653b;box-shadow:0 4px 12px rgba(40,60,35,.08);font-size:clamp(8px,.72vw,12px);line-height:1.05;white-space:nowrap}
-  .row-title small{display:block;font-size:clamp(6px,.55vw,8px);color:#7d8b77;letter-spacing:.2px}.plants{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .row{min-width:0;text-align:center;display:grid;grid-template-rows:38px auto;row-gap:14px;align-items:start}.row-title{position:relative;top:auto;z-index:2;background:#fff;border:1px solid #dde7d8;border-radius:10px;padding:6px 1px;margin:0;min-height:28px;height:32px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-weight:900;color:#44653b;box-shadow:0 4px 12px rgba(40,60,35,.08);font-size:clamp(8px,.72vw,12px);line-height:1.05;white-space:nowrap}
+  .row-title small{display:block;font-size:clamp(6px,.55vw,8px);color:#7d8b77;letter-spacing:.2px}.plants{display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:4px}
   .plant-wrap{position:relative;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center}.plant-wrap:not(:last-child):after{content:"";position:absolute;width:1px;height:6px;background:#b7c9ad;top:27px;left:50%;transform:translateX(-50%)}
   .plant{width:clamp(11px,1.25vw,22px);height:clamp(11px,1.25vw,22px);border:none;border-radius:50%;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.12);position:relative;transition:.15s transform,.15s box-shadow;display:grid;place-items:center;color:#fff;font-size:clamp(7px,.8vw,12px);padding:0}
   .plant:hover{transform:scale(1.55);box-shadow:0 8px 15px rgba(0,0,0,.18);z-index:4}.plant.active{outline:3px solid rgba(47,85,40,.20);transform:scale(1.45);z-index:5}
@@ -61,9 +61,9 @@
     .field-head h2{font-size:16px}
     .legend{font-size:10px;gap:6px;line-height:1.4}
     .rows{display:grid;grid-template-columns:repeat(41,38px);gap:5px;width:max-content;min-width:max-content;padding:4px 4px 18px}
-    .row{width:38px}
-    .row-title{position:sticky;top:72px;font-size:10px;border-radius:8px;padding:5px 1px;margin-bottom:7px;z-index:3}
-    .plants{gap:4px}
+    .row{width:38px;grid-template-rows:28px auto;row-gap:7px}
+    .row-title{position:relative;top:auto;font-size:10px;border-radius:8px;padding:5px 1px;margin:0;min-height:0;height:26px;z-index:3}
+    .plants{gap:4px;padding-top:0}
     .plant-wrap{height:29px}
     .plant-wrap:not(:last-child):after{height:5px;top:24px}
     .plant{width:20px;height:20px;font-size:11px;touch-action:manipulation}
