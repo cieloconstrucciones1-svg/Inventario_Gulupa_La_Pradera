@@ -144,9 +144,29 @@ const REPLANT_IDS = [
   'K3','K4','K10','L4','L7','M10','M12','M25','N8','N13','Ñ9','Ñ11','Ñ12','O34',
   'S2','S32','V27','AK3','AN1','AO1','AB6'
 ];
+
+// Referencias explícitas a los controles para evitar conflictos con propiedades del navegador.
+const rowsEl = document.getElementById('rows');
+const editorPopupEl = document.getElementById('editorPopup');
+const plantTitleEl = document.getElementById('plantTitle');
+const plantMetaEl = document.getElementById('plantMeta');
+const statusSelect = document.getElementById('status');
+const problemSelect = document.getElementById('problem');
+const notesInput = document.getElementById('notes');
+const updatedInput = document.getElementById('updated');
+const saveBtnEl = document.getElementById('saveBtn');
+const closePopupEl = document.getElementById('closePopup');
+const kTotalEl = document.getElementById('kTotal');
+const kOkEl = document.getElementById('kOk');
+const kWatchEl = document.getElementById('kWatch');
+const kSickEl = document.getElementById('kSick');
+const kReplantEl = document.getElementById('kReplant');
+const kNewEl = document.getElementById('kNew');
+
 let data = JSON.parse(localStorage.getItem(storageKey)||'{}');
 let selected=null;
 const today = new Date().toISOString().slice(0,10);
+
 function ensureData(){
   const validIds = new Set();
   ROWS.forEach(r=>{
@@ -157,37 +177,146 @@ function ensureData(){
     }
   });
   Object.keys(data).forEach(id=>{ if(!validIds.has(id)) delete data[id]; });
+
+  // Carga inicial del inventario dictado. Se ejecuta solo una vez en cada navegador.
   if(!localStorage.getItem(updateKey)){
     REPLANT_IDS.forEach(id=>{
-      if(data[id]){data[id].status='replant';data[id].problem='';data[id].notes=data[id].notes||'Marcada para resembrar';data[id].updated=today;}
+      if(data[id]){
+        data[id].status='replant';
+        data[id].problem='';
+        data[id].notes=data[id].notes||'Marcada para resembrar';
+        data[id].updated=today;
+      }
     });
     localStorage.setItem(updateKey,'1');
   }
-  save(false);
+  persistData();
 }
-function save(render=true){ localStorage.setItem(storageKey,JSON.stringify(data)); if(render){renderRows();updateStats();if(selected)openEditor(selected);} }
+
+function persistData(){
+  localStorage.setItem(storageKey,JSON.stringify(data));
+}
+
 function iconFor(status){return status==='dead'?'✕':'🌱'}
+function labelStatus(s){return {ok:'Buen estado',watch:'En observación',sick:'Enferma',replant:'Para resembrar',new:'Recién resembrada',dead:'Muerta / eliminada'}[s] || 'Buen estado'}
+
 function renderRows(){
-  const root=document.getElementById('rows'); root.innerHTML='';
-  ROWS.forEach(r=>{const col=document.createElement('div');col.className='row';col.innerHTML=`<div class="row-title">${r}</div>`;const plants=document.createElement('div');plants.className='plants';
-    for(let i=1;i<=ROW_COUNTS[r];i++){const id=r+i,p=data[id];const wrap=document.createElement('div');wrap.className='plant-wrap';
-      if(id===TANK_ID){wrap.innerHTML=`<div class="tank" title="${id} · Tanque de mezcla">🛢️</div><div class="tank-code">TANQUE</div>`;}
-      else{wrap.innerHTML=`<button class="plant ${p.status} ${selected===id?'active':''}" data-id="${id}" title="${id} · ${labelStatus(p.status)}">${iconFor(p.status)}</button><div class="plant-code">${id}</div>`;}
-      plants.appendChild(wrap)}
-    col.appendChild(plants);root.appendChild(col)
+  rowsEl.innerHTML='';
+  ROWS.forEach(r=>{
+    const col=document.createElement('div');
+    col.className='row';
+    col.innerHTML=`<div class="row-title">${r}</div>`;
+    const plants=document.createElement('div');
+    plants.className='plants';
+
+    for(let i=1;i<=ROW_COUNTS[r];i++){
+      const id=r+i,p=data[id];
+      const wrap=document.createElement('div');
+      wrap.className='plant-wrap';
+      if(id===TANK_ID){
+        wrap.innerHTML=`<div class="tank" title="${id} · Tanque de mezcla">🛢️</div><div class="tank-code">TANQUE</div>`;
+      } else {
+        wrap.innerHTML=`<button class="plant ${p.status} ${selected===id?'active':''}" data-id="${id}" title="${id} · ${labelStatus(p.status)}">${iconFor(p.status)}</button><div class="plant-code">${id}</div>`;
+      }
+      plants.appendChild(wrap);
+    }
+    col.appendChild(plants);
+    rowsEl.appendChild(col);
   });
-  document.querySelectorAll('.plant').forEach(b=>b.onclick=(e)=>{selected=b.dataset.id;renderRows();openEditor(selected,e.currentTarget)});
+
+  document.querySelectorAll('.plant').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      selected=btn.dataset.id;
+      document.querySelectorAll('.plant.active').forEach(x=>x.classList.remove('active'));
+      btn.classList.add('active');
+      openEditor(selected,btn);
+    });
+  });
 }
-function labelStatus(s){return {ok:'Buen estado',watch:'En observación',sick:'Enferma',replant:'Para resembrar',new:'Recién resembrada',dead:'Muerta / eliminada'}[s]}
-function updateStats(){const vals=Object.values(data).filter(p=>p.id!==TANK_ID);const count=s=>vals.filter(p=>p.status===s).length; kTotal.textContent=vals.length;kOk.textContent=count('ok');kWatch.textContent=count('watch');kSick.textContent=count('sick');kReplant.textContent=count('replant');kNew.textContent=count('new');}
-function openEditor(id,anchor){if(!id){closeEditor();return}const p=data[id];plantTitle.textContent=`Planta ${p.id}`;plantMeta.textContent=`Surco ${p.row} · Planta ${p.n}`;status.value=p.status;problem.value=p.problem||'';notes.value=p.notes||'';updated.value=p.updated||today;editorPopup.classList.add('open');editorPopup.setAttribute('aria-hidden','false');if(anchor)positionPopup(anchor);}
-function positionPopup(anchor){if(window.innerWidth<=620)return;const r=anchor.getBoundingClientRect(), pop=editorPopup;pop.style.visibility='hidden';pop.classList.add('open');const w=pop.offsetWidth,h=pop.offsetHeight,pad=10;let left=r.right+12,top=r.top-18;if(left+w>window.innerWidth-pad)left=r.left-w-12;if(left<pad)left=pad;if(top+h>window.innerHeight-pad)top=window.innerHeight-h-pad;if(top<pad)top=pad;pop.style.left=`${left}px`;pop.style.top=`${top}px`;pop.style.visibility='visible';}
-function closeEditor(){editorPopup.classList.remove('open');editorPopup.setAttribute('aria-hidden','true');selected=null;renderRows();}
-closePopup.onclick=closeEditor;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEditor()});
-status.onchange=()=>{if(!selected)return;const btn=document.querySelector(`.plant[data-id=\"${selected}\"]`);if(btn){btn.className=`plant ${status.value} active`;btn.title=`${selected} · ${labelStatus(status.value)}`;}};
-saveBtn.onclick=()=>{if(!selected)return;data[selected].status=status.value;data[selected].problem=problem.value;data[selected].notes=notes.value;data[selected].updated=updated.value||today;save(true);}
-ensureData();renderRows();updateStats();
+
+function updateStats(){
+  const vals=Object.values(data).filter(p=>p.id!==TANK_ID);
+  const count=s=>vals.filter(p=>p.status===s).length;
+  kTotalEl.textContent=vals.length;
+  kOkEl.textContent=count('ok');
+  kWatchEl.textContent=count('watch');
+  kSickEl.textContent=count('sick');
+  kReplantEl.textContent=count('replant');
+  kNewEl.textContent=count('new');
+}
+
+function openEditor(id,anchor){
+  if(!id){closeEditor();return;}
+  const p=data[id];
+  plantTitleEl.textContent=`Planta ${p.id}`;
+  plantMetaEl.textContent=`Surco ${p.row} · Planta ${p.n}`;
+  statusSelect.value=p.status;
+  problemSelect.value=p.problem||'';
+  notesInput.value=p.notes||'';
+  updatedInput.value=p.updated||today;
+  editorPopupEl.classList.add('open');
+  editorPopupEl.setAttribute('aria-hidden','false');
+  if(anchor)positionPopup(anchor);
+}
+
+function positionPopup(anchor){
+  if(window.innerWidth<=620)return;
+  const r=anchor.getBoundingClientRect(), pop=editorPopupEl;
+  pop.style.visibility='hidden';
+  pop.classList.add('open');
+  const w=pop.offsetWidth,h=pop.offsetHeight,pad=10;
+  let left=r.right+12,top=r.top-18;
+  if(left+w>window.innerWidth-pad)left=r.left-w-12;
+  if(left<pad)left=pad;
+  if(top+h>window.innerHeight-pad)top=window.innerHeight-h-pad;
+  if(top<pad)top=pad;
+  pop.style.left=`${left}px`;
+  pop.style.top=`${top}px`;
+  pop.style.visibility='visible';
+}
+
+function closeEditor(){
+  editorPopupEl.classList.remove('open');
+  editorPopupEl.setAttribute('aria-hidden','true');
+  document.querySelectorAll('.plant.active').forEach(x=>x.classList.remove('active'));
+  selected=null;
+}
+
+closePopupEl.addEventListener('click',closeEditor);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEditor();});
+
+// Vista previa inmediata del color al cambiar el estado.
+statusSelect.addEventListener('change',()=>{
+  if(!selected)return;
+  const btn=document.querySelector(`.plant[data-id="${CSS.escape(selected)}"]`);
+  if(btn){
+    btn.className=`plant ${statusSelect.value} active`;
+    btn.title=`${selected} · ${labelStatus(statusSelect.value)}`;
+  }
+});
+
+// Guarda el nuevo estado y todos los datos de la planta en este navegador.
+saveBtnEl.addEventListener('click',()=>{
+  if(!selected)return;
+  const id=selected;
+  data[id].status=statusSelect.value;
+  data[id].problem=problemSelect.value;
+  data[id].notes=notesInput.value;
+  data[id].updated=updatedInput.value||today;
+  persistData();
+  renderRows();
+  updateStats();
+  const savedBtn=document.querySelector(`.plant[data-id="${CSS.escape(id)}"]`);
+  selected=id;
+  if(savedBtn){
+    savedBtn.classList.add('active');
+    openEditor(id,savedBtn);
+  }
+});
+
+ensureData();
+renderRows();
+updateStats();
 </script>
 </body>
 </html>
