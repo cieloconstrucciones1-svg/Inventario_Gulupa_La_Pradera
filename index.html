@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inventario cultivo de gulupa - Finca La Pradera</title>
+<style>
+  :root{
+    --bg:#f4f7ef; --panel:#ffffff; --text:#243021; --muted:#6f7d69;
+    --green:#3e7d44; --green2:#75a85d; --line:#dbe6d4; --shadow:0 12px 28px rgba(35,55,28,.10);
+    --ok:#2e9d50; --watch:#e6b638; --sick:#e97f27; --replant:#d84f4f; --new:#8d67c9; --dead:#7a7a7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#edf5e7 0%,#f8faf5 35%,#f4f7ef 100%);color:var(--text)}
+  header{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #e6ece1;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .brand{display:flex;align-items:center;gap:14px}
+  h1{margin:0;font-size:clamp(22px,3vw,34px);line-height:1.05}.subtitle{margin-top:4px;color:var(--green);font-weight:700}
+  .header-pill{padding:10px 14px;border-radius:999px;background:#edf6e9;color:#3f6f39;font-weight:700;font-size:13px}
+  main{max-width:100%;margin:auto;padding:18px}
+  .stats{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid #e6ecdf;border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+  .card b{display:block;font-size:24px;margin-top:5px}.card span{font-size:12px;color:var(--muted)}
+  .workspace{display:block}
+  .field{background:rgba(255,255,255,.83);border:1px solid #e2eadc;border-radius:24px;box-shadow:var(--shadow);padding:16px;min-height:760px;overflow:auto;position:relative}
+  .field:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:linear-gradient(#dfe8d9 1px,transparent 1px),linear-gradient(90deg,#dfe8d9 1px,transparent 1px);background-size:28px 28px;border-radius:24px}
+  .field-head{position:relative;display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+  .field-head h2{margin:0;font-size:19px}.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}
+  .view-note{position:relative;margin:0 0 12px;padding:9px 12px;border-radius:14px;background:#edf6e9;color:#42683b;font-size:13px;font-weight:700;border:1px solid #dcebd4}
+  .rows{position:relative;display:grid;grid-template-columns:repeat(41,minmax(12px,1fr));gap:4px;align-items:flex-start;width:100%;min-width:0;padding:4px 2px 22px}
+  .row{min-width:0;text-align:center}.row-title{position:sticky;top:82px;z-index:2;background:#fff;border:1px solid #dde7d8;border-radius:10px;padding:6px 1px;margin-bottom:10px;font-weight:900;color:#44653b;box-shadow:0 4px 12px rgba(40,60,35,.08);font-size:clamp(8px,.72vw,12px);line-height:1.05;white-space:nowrap}
+  .row-title small{display:block;font-size:clamp(6px,.55vw,8px);color:#7d8b77;letter-spacing:.2px}.plants{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .plant-wrap{position:relative;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center}.plant-wrap:not(:last-child):after{content:"";position:absolute;width:1px;height:6px;background:#b7c9ad;top:27px;left:50%;transform:translateX(-50%)}
+  .plant{width:clamp(11px,1.25vw,22px);height:clamp(11px,1.25vw,22px);border:none;border-radius:50%;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.12);position:relative;transition:.15s transform,.15s box-shadow;display:grid;place-items:center;color:#fff;font-size:clamp(7px,.8vw,12px);padding:0}
+  .plant:hover{transform:scale(1.55);box-shadow:0 8px 15px rgba(0,0,0,.18);z-index:4}.plant.active{outline:3px solid rgba(47,85,40,.20);transform:scale(1.45);z-index:5}
+  .plant-code{font-size:clamp(4px,.45vw,7px);font-weight:800;margin-top:1px;color:#5f6d5a;line-height:1;max-width:100%;overflow:hidden}
+  .tank{width:clamp(16px,1.7vw,28px);height:clamp(16px,1.7vw,28px);border:none;border-radius:8px;background:#5f7f91;color:#fff;display:grid;place-items:center;font-size:clamp(10px,1.1vw,16px);box-shadow:0 3px 8px rgba(0,0,0,.16);cursor:default}.tank-code{font-size:clamp(4px,.45vw,7px);font-weight:900;margin-top:1px;color:#4c6675;line-height:1}
+  .ok{background:var(--ok)}.watch{background:var(--watch)}.sick{background:var(--sick)}.replant{background:var(--replant)}.new{background:var(--new)}.dead{background:var(--dead)}
+  aside.editor-popup{position:fixed;z-index:50;width:min(300px,calc(100vw - 24px));background:#fff;border:1px solid #dbe7d5;border-radius:18px;padding:14px;box-shadow:0 18px 45px rgba(34,55,29,.22);display:none;animation:popIn .16s ease-out}
+  aside.editor-popup.open{display:block}
+  @keyframes popIn{from{opacity:0;transform:translateY(5px) scale(.98)}to{opacity:1;transform:none}}
+  .popup-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px}.popup-close{border:none;background:#eef4e9;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;color:#52604e}.popup-close:hover{background:#e2ebdc}
+  aside h3{margin:0 0 2px;font-size:18px}.meta{color:var(--muted);font-size:12px;margin-bottom:10px}
+  label{display:block;font-size:11px;font-weight:800;color:#52604e;margin:8px 0 4px}select,textarea,input{width:100%;border:1px solid #d8e2d3;border-radius:10px;padding:8px 9px;font:inherit;font-size:13px;background:#fbfcfa}textarea{min-height:62px;resize:vertical}
+  .btn{width:100%;border:none;border-radius:11px;padding:10px 12px;background:linear-gradient(135deg,#3f7b42,#6ea258);color:white;font-weight:800;cursor:pointer;margin-top:10px}.btn:hover{filter:brightness(.96)}
+  .small{font-size:10px;color:#81907d;margin-top:8px;line-height:1.35}.empty{display:none}
+  @media(max-width:1300px){.field{min-height:720px}}
+  @media(max-width:1050px){.stats{grid-template-columns:repeat(3,1fr)}.rows{gap:3px}.plants{gap:4px}}
+  @media(max-width:620px){
+    body{overflow-x:hidden}
+    header{padding:11px 12px;position:sticky}
+    .brand{gap:0}
+    h1{font-size:21px}
+    .subtitle{font-size:14px;margin-top:3px}
+    .header-pill{display:none}
+    main{padding:9px}
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px}
+    .card{padding:10px;border-radius:14px;box-shadow:0 7px 18px rgba(35,55,28,.08)}
+    .card b{font-size:21px}.card span{font-size:11px}
+    .field{padding:10px 8px 14px;border-radius:18px;min-height:0;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .field-head{align-items:flex-start;flex-direction:column;position:sticky;left:0;z-index:4;background:rgba(255,255,255,.94);padding:2px 2px 8px;margin-bottom:6px;min-width:calc(100vw - 34px)}
+    .field-head h2{font-size:16px}
+    .legend{font-size:10px;gap:6px;line-height:1.4}
+    .rows{display:grid;grid-template-columns:repeat(41,38px);gap:5px;width:max-content;min-width:max-content;padding:4px 4px 18px}
+    .row{width:38px}
+    .row-title{position:sticky;top:72px;font-size:10px;border-radius:8px;padding:5px 1px;margin-bottom:7px;z-index:3}
+    .plants{gap:4px}
+    .plant-wrap{height:29px}
+    .plant-wrap:not(:last-child):after{height:5px;top:24px}
+    .plant{width:20px;height:20px;font-size:11px;touch-action:manipulation}
+    .plant:hover{transform:none}.plant.active{transform:scale(1.2)}
+    .plant-code{display:block;font-size:6px;margin-top:1px;overflow:visible}
+    .tank{width:24px;height:24px;font-size:14px}.tank-code{font-size:6px}
+    aside.editor-popup{left:10px!important;right:10px!important;top:auto!important;bottom:10px!important;width:auto;max-height:72vh;overflow:auto;border-radius:16px;padding:12px}
+    aside h3{font-size:17px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div><h1>Inventario cultivo de gulupa</h1><div class="subtitle">Finca La Pradera</div></div>
+  </div>
+  <div class="header-pill">🌿 41 surcos · 1.119 plantas · 1 tanque</div>
+</header>
+<main>
+  <section class="stats">
+    <div class="card"><span>Total plantas</span><b id="kTotal">0</b></div>
+    <div class="card"><span>Buen estado</span><b id="kOk">0</b></div>
+    <div class="card"><span>En observación</span><b id="kWatch">0</b></div>
+    <div class="card"><span>Enfermas</span><b id="kSick">0</b></div>
+    <div class="card"><span>Para resembrar</span><b id="kReplant">0</b></div>
+    <div class="card"><span>Recién resembradas</span><b id="kNew">0</b></div>
+  </section>
+
+  <div class="workspace">
+    <section class="field">
+      <div class="field-head">
+        <h2>Plano interactivo del cultivo</h2>
+        <div class="legend">
+          <span><i style="background:var(--ok)"></i>Bien</span><span><i style="background:var(--watch)"></i>Observación</span><span><i style="background:var(--sick)"></i>Enferma</span><span><i style="background:var(--replant)"></i>Resembrar</span><span><i style="background:var(--new)"></i>Resembrada</span><span><i style="background:var(--dead)"></i>Muerta</span>
+        </div>
+      </div>
+      <div class="rows" id="rows"></div>
+    </section>
+
+    <aside id="editorPopup" class="editor-popup" aria-hidden="true">
+      <div id="editor">
+        <div class="popup-head">
+          <div><h3 id="plantTitle">Planta A1</h3><div class="meta" id="plantMeta">Surco A · Planta 1</div></div>
+          <button class="popup-close" id="closePopup" title="Cerrar">×</button>
+        </div>
+        <label>Estado actual</label>
+        <select id="status">
+          <option value="ok">Buen estado</option><option value="watch">En observación</option><option value="sick">Enferma</option><option value="replant">Para resembrar</option><option value="new">Recién resembrada</option><option value="dead">Muerta / eliminada</option>
+        </select>
+        <label>Problema o novedad</label>
+        <select id="problem">
+          <option value="">Sin novedad</option><option>Trips</option><option>Hongos</option><option>Quemadura</option><option>Deficiencia nutricional</option><option>Daño mecánico</option><option>Problema de riego</option><option>Planta débil</option><option>Otro</option>
+        </select>
+        <label>Observación</label>
+        <textarea id="notes" placeholder="Escribe aquí lo que observaste..."></textarea>
+        <label>Fecha de actualización</label>
+        <input id="updated" type="date" />
+        <button class="btn" id="saveBtn">Guardar cambios</button>
+        <div class="small">Esta primera versión guarda los cambios en este navegador. Luego conectaremos una base de datos para que queden disponibles desde cualquier dispositivo.</div>
+      </div>
+    </aside>
+  </div>
+</main>
+<script>
+const ROW_COUNTS = {
+  'A':26,'B':36,'C':38,'D':38,'E':38,'F':38,'G':38,'H':38,'I':38,
+  'J':42,'K':42,'L':42,'M':44,'N':44,'Ñ':44,'O':44,'Q':40,'R':40,
+  'S':36,'T':34,'U':32,'V':28,'X':28,'Y':24,'Z':24,'AA':24,'AB':22,
+  'AC':22,'AD':20,'AE':20,'AF':20,'AG':16,'AH':14,'AI':12,'AJ':10,
+  'AK':8,'AL':4,'AM':4,'AN':4,'AÑ':2,'AO':2
+};
+const ROWS = Object.keys(ROW_COUNTS);
+const storageKey='laPraderaPlants_v1';
+const updateKey='laPraderaUpdate_20260817_replant_v1';
+const TANK_ID='M27';
+const REPLANT_IDS = [
+  'A6','A23','A24','B19','B33','C11','C16','D3','D21','E1','E3','E4','E5',
+  'F1','F3','F4','F5','F6','G2','G4','G5','H3','H6','I8','I9','J5','J10','J20',
+  'K3','K4','K10','L4','L7','M10','M12','M25','N8','N13','Ñ9','Ñ11','Ñ12','O34',
+  'S2','S32','V27','AK3','AN1','AO1','AB6'
+];
+let data = JSON.parse(localStorage.getItem(storageKey)||'{}');
+let selected=null;
+const today = new Date().toISOString().slice(0,10);
+function ensureData(){
+  const validIds = new Set();
+  ROWS.forEach(r=>{
+    for(let i=1;i<=ROW_COUNTS[r];i++){
+      const id=r+i;
+      validIds.add(id);
+      if(!data[id]) data[id]={id,row:r,n:i,status:'ok',problem:'',notes:'',updated:today};
+    }
+  });
+  Object.keys(data).forEach(id=>{ if(!validIds.has(id)) delete data[id]; });
+  if(!localStorage.getItem(updateKey)){
+    REPLANT_IDS.forEach(id=>{
+      if(data[id]){data[id].status='replant';data[id].problem='';data[id].notes=data[id].notes||'Marcada para resembrar';data[id].updated=today;}
+    });
+    localStorage.setItem(updateKey,'1');
+  }
+  save(false);
+}
+function save(render=true){ localStorage.setItem(storageKey,JSON.stringify(data)); if(render){renderRows();updateStats();if(selected)openEditor(selected);} }
+function iconFor(status){return status==='dead'?'✕':'🌱'}
+function renderRows(){
+  const root=document.getElementById('rows'); root.innerHTML='';
+  ROWS.forEach(r=>{const col=document.createElement('div');col.className='row';col.innerHTML=`<div class="row-title">${r}</div>`;const plants=document.createElement('div');plants.className='plants';
+    for(let i=1;i<=ROW_COUNTS[r];i++){const id=r+i,p=data[id];const wrap=document.createElement('div');wrap.className='plant-wrap';
+      if(id===TANK_ID){wrap.innerHTML=`<div class="tank" title="${id} · Tanque de mezcla">🛢️</div><div class="tank-code">TANQUE</div>`;}
+      else{wrap.innerHTML=`<button class="plant ${p.status} ${selected===id?'active':''}" data-id="${id}" title="${id} · ${labelStatus(p.status)}">${iconFor(p.status)}</button><div class="plant-code">${id}</div>`;}
+      plants.appendChild(wrap)}
+    col.appendChild(plants);root.appendChild(col)
+  });
+  document.querySelectorAll('.plant').forEach(b=>b.onclick=(e)=>{selected=b.dataset.id;renderRows();openEditor(selected,e.currentTarget)});
+}
+function labelStatus(s){return {ok:'Buen estado',watch:'En observación',sick:'Enferma',replant:'Para resembrar',new:'Recién resembrada',dead:'Muerta / eliminada'}[s]}
+function updateStats(){const vals=Object.values(data).filter(p=>p.id!==TANK_ID);const count=s=>vals.filter(p=>p.status===s).length; kTotal.textContent=vals.length;kOk.textContent=count('ok');kWatch.textContent=count('watch');kSick.textContent=count('sick');kReplant.textContent=count('replant');kNew.textContent=count('new');}
+function openEditor(id,anchor){if(!id){closeEditor();return}const p=data[id];plantTitle.textContent=`Planta ${p.id}`;plantMeta.textContent=`Surco ${p.row} · Planta ${p.n}`;status.value=p.status;problem.value=p.problem||'';notes.value=p.notes||'';updated.value=p.updated||today;editorPopup.classList.add('open');editorPopup.setAttribute('aria-hidden','false');if(anchor)positionPopup(anchor);}
+function positionPopup(anchor){if(window.innerWidth<=620)return;const r=anchor.getBoundingClientRect(), pop=editorPopup;pop.style.visibility='hidden';pop.classList.add('open');const w=pop.offsetWidth,h=pop.offsetHeight,pad=10;let left=r.right+12,top=r.top-18;if(left+w>window.innerWidth-pad)left=r.left-w-12;if(left<pad)left=pad;if(top+h>window.innerHeight-pad)top=window.innerHeight-h-pad;if(top<pad)top=pad;pop.style.left=`${left}px`;pop.style.top=`${top}px`;pop.style.visibility='visible';}
+function closeEditor(){editorPopup.classList.remove('open');editorPopup.setAttribute('aria-hidden','true');selected=null;renderRows();}
+closePopup.onclick=closeEditor;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEditor()});
+status.onchange=()=>{if(!selected)return;const btn=document.querySelector(`.plant[data-id=\"${selected}\"]`);if(btn){btn.className=`plant ${status.value} active`;btn.title=`${selected} · ${labelStatus(status.value)}`;}};
+saveBtn.onclick=()=>{if(!selected)return;data[selected].status=status.value;data[selected].problem=problem.value;data[selected].notes=notes.value;data[selected].updated=updated.value||today;save(true);}
+ensureData();renderRows();updateStats();
+</script>
+</body>
+</html>
